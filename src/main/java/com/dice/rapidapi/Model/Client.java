@@ -24,5 +24,5 @@ public class Client {
     private String fullName;
     private String email;
     private String password;
-    private boolean login_with_google;
+    //private boolean login_with_google;
 }

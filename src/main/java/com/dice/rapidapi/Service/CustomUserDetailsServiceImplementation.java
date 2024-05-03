@@ -26,9 +26,10 @@ public class CustomUserDetailsServiceImplementation implements UserDetailsServic
 
         Client client = clientRepository.findByEmail(username);
 
-        if(client==null || client.isLogin_with_google()) {
-            throw new UsernameNotFoundException("username not found with email" + username);
+        if (client == null) {
+            throw new UsernameNotFoundException("User not found with email: " + username);
         }
+
         List<GrantedAuthority> authorities = new ArrayList<>();
 
         return new org.springframework.security.core.userdetails.User(client.getEmail(), client.getPassword(),authorities);

@@ -7,22 +7,16 @@ import com.dice.rapidapi.Model.Client;
 import com.dice.rapidapi.Repository.ClientRepository;
 import com.dice.rapidapi.Response.AuthResponse;
 import com.dice.rapidapi.Service.CustomUserDetailsServiceImplementation;
-import jdk.jshell.spi.ExecutionControl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 
 @RestController
@@ -43,7 +37,7 @@ public class AuthController {
 
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> createUserHandler(@RequestBody Client client) throws ClientException {
+    public ResponseEntity<?> createUserHandler(@RequestBody Client client) throws ClientException {
 
         String email=client.getEmail();
         String password = client.getPassword();
@@ -52,14 +46,15 @@ public class AuthController {
 
         Client isEmailExist = clientRepository.findByEmail(email);
         if(isEmailExist != null) {
-            throw new ClientException("Email is already used with another account");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Email is already used with another account");
         }
-        Client createdUser = new Client();
-        createdUser.setEmail(email);
-        createdUser.setFullName(fullName);
-        createdUser.setPassword(passwordEncoder.encode(password));
+        Client createdClinet = new Client();
+        createdClinet.setEmail(email);
+        createdClinet.setFullName(fullName);
+        createdClinet.setPassword(passwordEncoder.encode(password));
 
-        Client savedUser = clientRepository.save(createdUser);
+        Client savedClient = clientRepository.save(createdClinet);
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(email, password);
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -75,11 +70,17 @@ public class AuthController {
 
 
     @PostMapping("/signin")
-    public ResponseEntity<AuthResponse> signin(@RequestBody Client user){
-        String username = user.getEmail();
-        String password = user.getPassword();
+    public ResponseEntity<?> signin(@RequestBody Client client){
+        String name = client.getEmail();
+        String password = client.getPassword();
 
-        Authentication authentication = authenticate(username,password);
+//        Client isEmailExist = clientRepository.findByEmail(name);
+//        if(isEmailExist != null) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body("Email is not valid");
+//        }
+
+        Authentication authentication = authenticate(name,password);
         String token = jwtProvider.generateToken(authentication);
 
         AuthResponse res = new AuthResponse();
@@ -94,13 +95,33 @@ public class AuthController {
         UserDetails userDetails = customeUserDetails.loadUserByUsername(username);
 
         if(userDetails == null) {
-            throw new BadCredentialsException("Invalid username...");
+            throw new BadCredentialsException("Invalid name...");
         }
         if(!passwordEncoder.matches(password, userDetails.getPassword())) {
             throw new BadCredentialsException("Invalid username or password");
         }
         return new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
 
+    }
+
+
+    @GetMapping("/forecast")
+    public ResponseEntity<String> getForecast() {
+        String apiUrl = "https://forecast9.p.rapidapi.com/rapidapi/forecast/Berlin/summary/?locationName=Berlin";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-RapidAPI-Key", "6efddc62camshdc3f3ebd39b9c81p1e435ajsn9628e62f06ba");
+        headers.set("X-RapidAPI-Host", "forecast9.p.rapidapi.com");
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                String.class
+        );
+
+        return response;
     }
 
 
