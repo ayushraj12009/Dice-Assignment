@@ -115,7 +115,7 @@ public class AuthController {
 
     @GetMapping("/forecastSummaryByLocationName")
     public ResponseEntity<String> getForecast() {
-        String apiUrl = "https://forecast9.p.rapidapi.com/rapidapi/forecast/Berlin/summary/?locationName=Berlin";
+        String apiUrl = "https://forecast9.p.rapidapi.com/rapidapi/forecast/Berlin/summary/";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-RapidAPI-Key", "6efddc62camshdc3f3ebd39b9c81p1e435ajsn9628e62f06ba");
