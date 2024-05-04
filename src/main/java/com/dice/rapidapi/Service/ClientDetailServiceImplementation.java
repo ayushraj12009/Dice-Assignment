@@ -16,22 +16,22 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-public class CustomUserDetailsServiceImplementation implements UserDetailsService {
+public class ClientDetailServiceImplementation implements UserDetailsService {
 
     @Autowired
     private ClientRepository clientRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
         Client client = clientRepository.findByEmail(username);
 
         if (client == null) {
-            throw new UsernameNotFoundException("User not found with email: " + username);
+            throw new UsernameNotFoundException("Client not found with email: " + username);
         }
 
         List<GrantedAuthority> authorities = new ArrayList<>();
 
         return new org.springframework.security.core.userdetails.User(client.getEmail(), client.getPassword(),authorities);
+
     }
 }
